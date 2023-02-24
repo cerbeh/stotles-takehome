@@ -24,7 +24,7 @@ function RecordSearchPage({ buyers }: { buyers: Buyer[] }) {
   const [searchFilters, setSearchFilters] = React.useState<SearchFilters>({
     query: "",
   });
-  const [buyerFilterIds, setBuyerFilterIds] = React.useState<string[]>([])
+  const [buyerFilterId, setBuyerFilterId] = React.useState("")
 
   const [records, setRecords] = React.useState<
     ProcurementRecord[] | undefined
@@ -37,7 +37,7 @@ function RecordSearchPage({ buyers }: { buyers: Buyer[] }) {
       const api = new Api();
       const response = await api.searchRecords({
         textSearch: searchFilters.query,
-        buyerIds: buyerFilterIds,
+        buyerId: buyerFilterId,
         limit: PAGE_SIZE,
         offset: PAGE_SIZE * (page - 1),
       });
@@ -50,12 +50,17 @@ function RecordSearchPage({ buyers }: { buyers: Buyer[] }) {
       }
       setReachedEndOfSearch(response.endOfResults);
     })();
-  }, [searchFilters, page]);
+  }, [searchFilters, page, buyerFilterId]);
 
   const handleChangeFilters = React.useCallback((newFilters: SearchFilters) => {
     setSearchFilters(newFilters);
     setPage(1); // reset pagination state
   }, []);
+
+  const handleSetBuyerIds = React.useCallback((buyerId: string) => {
+    setBuyerFilterId(buyerId)
+    setPage(1)
+  }, [])
 
   const handleLoadMore = React.useCallback(() => {
     setPage((page) => page + 1);
@@ -70,7 +75,6 @@ function RecordSearchPage({ buyers }: { buyers: Buyer[] }) {
       {buyers ? <BuyerSelectFilter options={buyers} onChange={handleSetBuyerIds} /> : null}
       {records && (
         <>
-          <BuyerSelectFilter options={[...new Set(records.map(record => record.buyer))]} onChange={setBuyerFilterIds} />
           <RecordsTable records={records} />
           {!reachedEndOfSearch && (
             <Button onClick={handleLoadMore}>Load more</Button>
