@@ -1,5 +1,6 @@
 export type SearchRecordsRequest = {
   textSearch?: string;
+  buyerIds?: string[]
   limit: number;
   offset: number;
 };
@@ -9,16 +10,18 @@ export type ProcurementRecord = {
   title: string;
   description: string;
   publishDate: string;
-  buyer: {
-    id: string;
-    name: string;
-  };
+  buyer: Buyer
   value: number;
   currency: string;
   stage: 'TENDER' | 'CONTRACT';
   award_date: string;
   close_date: string;
 };
+
+export type Buyer = {
+  id: string;
+  name: string;
+}
 
 export type SearchRecordsResponse = {
   records: ProcurementRecord[];
