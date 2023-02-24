@@ -39,6 +39,41 @@ function RecordsTable(props: Props) {
         title: "Buyer name",
         render: (record: ProcurementRecord) => record.buyer.name,
       },
+      {
+        title: "Value",
+        render: (record: ProcurementRecord) => {
+          if (record.currency === null) {
+            return record.value
+          }
+          const CURRENCY_LOOKUP = {
+            'GBP': {
+              prefix: '£',
+            },
+            'EUR': {
+              prefix: '€',
+            },
+            'GBP/day': {
+              prefix: '£',
+              suffix: ' per day',
+            }
+          }
+          const { prefix, suffix = '' } = CURRENCY_LOOKUP[record.currency]
+          return `${prefix}${record.value.toLocaleString('en-UK')}${suffix}`
+        }
+      },
+      {
+        title: "Stage",
+        render: (record: ProcurementRecord) => {
+
+          const stageCopy: {
+            [key in ProcurementRecord['stage']]: string
+          } = {
+            'TENDER': `Open until ${record.close_date} `,
+            'CONTRACT': `Awarded on ${record.award_date} `
+          }
+          return stageCopy[record.stage]
+        }
+      }
     ];
   }, []);
   return (
