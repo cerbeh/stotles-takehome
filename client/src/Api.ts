@@ -1,6 +1,6 @@
 export type SearchRecordsRequest = {
   textSearch?: string;
-  buyerIds?: string[]
+  buyerId?: string;
   limit: number;
   offset: number;
 };
@@ -40,6 +40,11 @@ class Api {
       body: JSON.stringify(request),
     });
     return await response.json();
+  }
+
+  async getBuyers(): Promise<Buyer[]> {
+    const response = await fetch("/api/buyers")
+    return await response.json()
   }
 }
 

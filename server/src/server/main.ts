@@ -42,40 +42,45 @@ app.use(express.json());
 
 type RecordSearchFilters = {
   textSearch?: string;
+  buyerId?: string;
 };
 
 /**
  * Queries the database for procurement records according to the search filters.
  */
 async function searchRecords(
-  { textSearch }: RecordSearchFilters,
+  { textSearch, buyerId }: RecordSearchFilters,
   offset: number,
   limit: number
 ): Promise<ProcurementRecord[]> {
-  if (textSearch) {
-    return await sequelize.query(
-      "SELECT * FROM procurement_records WHERE title LIKE :textSearch OR description LIKE :textSearch LIMIT :limit OFFSET :offset",
-      {
-        model: ProcurementRecord, // by setting this sequelize will return a list of ProcurementRecord objects
-        replacements: {
-          textSearch: `%${textSearch}%`,
-          offset: offset,
-          limit: limit,
-        },
-      }
-    );
-  } else {
-    return await sequelize.query(
-      "SELECT * FROM procurement_records LIMIT :limit OFFSET :offset",
-      {
-        model: ProcurementRecord,
-        replacements: {
-          offset: offset,
-          limit: limit,
-        },
-      }
-    );
+
+  const options = {
+    model: ProcurementRecord,
+    replacements: {
+      textSearch: `%${textSearch}%`,
+      buyerId: buyerId,
+      offset: offset,
+      limit: limit,
+    },
   }
+
+
+  let query = "SELECT * FROM procurement_records"
+  if (textSearch) {
+    query += " WHERE (title LIKE :textSearch OR description LIKE :textSearch)"
+  }
+
+  if (buyerId) {
+    const prefix = textSearch ? "AND" : "WHERE"
+    query += ` ${prefix} buyer_id=:buyerId`
+  }
+
+  query += " LIMIT :limit OFFSET :offset"
+  return await sequelize.query(query, options)
+}
+
+async function getBuyers(): Promise<Buyer[]> {
+  return await sequelize.query("SELECT * FROM buyers", { model: Buyer });
 }
 
 /**
@@ -160,11 +165,11 @@ app.post("/api/records", async (req, res) => {
   const records = await searchRecords(
     {
       textSearch: requestPayload.textSearch,
+      buyerId: requestPayload.buyerId
     },
     offset,
     limit + 1
   );
-
   const response: RecordSearchResponse = {
     records: await serializeProcurementRecords(
       records.slice(0, limit) // only return the number of records requested
@@ -174,6 +179,11 @@ app.post("/api/records", async (req, res) => {
 
   res.json(response);
 });
+
+app.get("/api/buyers", async (req, res) => {
+  const buyers = await getBuyers()
+  res.json(buyers.map(buyer => ({ id: buyer.id, name: buyer.name })))
+})
 
 app.listen(app.get("port"), () => {
   console.log("  App is running at http://localhost:%d", app.get("port"));

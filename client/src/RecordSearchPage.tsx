@@ -19,7 +19,7 @@ import { BuyerSelectFilter } from './BuyerSelectFilter'
 
 const PAGE_SIZE = 10;
 
-function RecordSearchPage() {
+function RecordSearchPage({ buyers }: { buyers: Buyer[] }) {
   const [page, setPage] = React.useState<number>(1);
   const [searchFilters, setSearchFilters] = React.useState<SearchFilters>({
     query: "",
@@ -67,6 +67,7 @@ function RecordSearchPage() {
         filters={searchFilters}
         onChange={handleChangeFilters}
       />
+      {buyers ? <BuyerSelectFilter options={buyers} onChange={handleSetBuyerIds} /> : null}
       {records && (
         <>
           <BuyerSelectFilter options={[...new Set(records.map(record => record.buyer))]} onChange={setBuyerFilterIds} />
